@@ -10,22 +10,22 @@ import (
 )
 
 var cfg *config.Config
-var log *slog.Logger
+var appLog *slog.Logger
 
 func init() {
 	cfg = config.MustLoadConf()
 
-	log = logs.InitLog(cfg.Env)
+	appLog = logs.InitLog(cfg.Env)
 }
 
 func main() {
-	db, err := sqlite.New(cfg.StoragePath)
+	db, err := sqlite.New(cfg.StoragePath, appLog)
 	if err != nil {
-		log.Error("failed to initialize database", "error", err)
+		appLog.Error("failed to initialize database", "error", err)
 		return
 	}
 
-	application := app.New(log, cfg.GrpcServ.Port, db)
+	application := app.New(appLog, cfg.GrpcServ.Port, db)
 
 	application.MustStart()
 }

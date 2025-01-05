@@ -3,16 +3,17 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type SQLiteDB struct {
-	db *sql.DB
+	db  *sql.DB
+	log *slog.Logger
 }
 
-func New(storagePath string) (*SQLiteDB, error) {
+func New(storagePath string, log *slog.Logger) (*SQLiteDB, error) {
 
 	db, err := sql.Open("sqlite3", storagePath)
 	if err != nil {
@@ -23,7 +24,8 @@ func New(storagePath string) (*SQLiteDB, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	log.Println("connect to DB successfully")
+	// AppLog.Info("connect to DB successfully")
+	log.Info("connect to DB successfully")
 
-	return &SQLiteDB{db: db}, nil
+	return &SQLiteDB{db: db, log: log}, nil
 }

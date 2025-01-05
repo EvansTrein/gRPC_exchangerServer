@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"github.com/EvansTrein/exchanger_gRPC/internal/storages"
 	pb "github.com/EvansTrein/proto-exchange/exchange"
@@ -11,15 +11,15 @@ import (
 
 type ServerGrpc struct {
 	pb.UnimplementedExchangeServiceServer
-	db storages.Database
+	db  storages.Database
+	log *slog.Logger
 }
 
-func RegisterServ(gRPC *grpc.Server, db storages.Database) {
-	pb.RegisterExchangeServiceServer(gRPC, &ServerGrpc{db: db})
+func RegisterServ(gRPC *grpc.Server, db storages.Database, log *slog.Logger) {
+	pb.RegisterExchangeServiceServer(gRPC, &ServerGrpc{db: db, log: log})
 }
 
 func (s *ServerGrpc) GetExchangeRates(ctx context.Context, req *pb.Empty) (*pb.ExchangeRatesResponse, error) {
-	log.Println("GetExchangeRates")
 	resp := &pb.ExchangeRatesResponse{}
 
 	result, err := s.db.Rate(ctx, "CNY")
@@ -27,7 +27,7 @@ func (s *ServerGrpc) GetExchangeRates(ctx context.Context, req *pb.Empty) (*pb.E
 		return nil, err
 	}
 
-	log.Println(result)
+	s.log.Info("database data has been retrieved", slog.Any("data", result))
 
 	answer := make(map[string]float32)
 	answer["USD"] = 100
