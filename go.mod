@@ -1,4 +1,4 @@
-module github.com/EvansTrein/exchanger_gRPC
+module github.com/EvansTrein/gRPC_exchangerServer
 
 go 1.23.0
 

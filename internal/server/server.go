@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/EvansTrein/exchanger_gRPC/internal/storages"
+	"github.com/EvansTrein/gRPC_exchangerServer/internal/storages"
 	pb "github.com/EvansTrein/proto-exchange/exchange"
 	"google.golang.org/grpc"
 )

@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/EvansTrein/exchanger_gRPC/internal/server"
-	"github.com/EvansTrein/exchanger_gRPC/internal/storages"
+	"github.com/EvansTrein/gRPC_exchangerServer/internal/server"
+	"github.com/EvansTrein/gRPC_exchangerServer/internal/storages"
 	"google.golang.org/grpc"
 )
 

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/EvansTrein/exchanger_gRPC/internal/storages"
+	"github.com/EvansTrein/gRPC_exchangerServer/internal/storages"
 )
 
 func (s *SQLiteDB) Rate(ctx context.Context, currency string) (*storages.Rate, error) {

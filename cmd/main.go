@@ -6,10 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/EvansTrein/exchanger_gRPC/internal/app"
-	"github.com/EvansTrein/exchanger_gRPC/internal/config"
-	"github.com/EvansTrein/exchanger_gRPC/internal/storages/sqlite"
-	"github.com/EvansTrein/exchanger_gRPC/pkg/logs"
+	"github.com/EvansTrein/gRPC_exchangerServer/internal/app"
+	"github.com/EvansTrein/gRPC_exchangerServer/internal/config"
+	"github.com/EvansTrein/gRPC_exchangerServer/internal/storages/sqlite"
+	"github.com/EvansTrein/gRPC_exchangerServer/pkg/logs"
 )
 
 var cfg *config.Config
