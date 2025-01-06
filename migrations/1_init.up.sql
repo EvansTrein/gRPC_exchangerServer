@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS Rates (
     toCurrencyID INTEGER NOT NULL,   
     rate FLOAT NOT NULL,                    
     date DATE NOT NULL,                    
-    FOREIGN KEY (baseCurrencyID) REFERENCES currencies(id),
-    FOREIGN KEY (toCurrencyID) REFERENCES currencies(id),
+    FOREIGN KEY (baseCurrencyID) REFERENCES Currencies(id),
+    FOREIGN KEY (toCurrencyID) REFERENCES Currencies(id),
     UNIQUE (baseCurrencyID, toCurrencyID, date)  
 );

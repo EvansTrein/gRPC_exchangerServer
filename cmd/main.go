@@ -2,6 +2,9 @@ package main
 
 import (
 	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/EvansTrein/exchanger_gRPC/internal/app"
 	"github.com/EvansTrein/exchanger_gRPC/internal/config"
@@ -21,15 +24,21 @@ func init() {
 func main() {
 	db, err := sqlite.New(cfg.StoragePath, appLog)
 	if err != nil {
-		appLog.Error("failed to initialize database", "error", err)
+		appLog.Error("failed to initialize database", slog.String("error", err.Error()))
 		return
 	}
 
 	application := app.New(appLog, cfg.GrpcServ.Port, db)
 
-	application.MustStart()
+	application.MustRatesInit()
+
+	go func() {
+		application.MustStart()
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	<-stop
+	application.Stop()
 }
-
-
-
-

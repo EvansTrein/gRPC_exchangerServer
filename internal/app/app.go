@@ -48,5 +48,36 @@ func (a *App) MustStart() {
 }
 
 func (a *App) Stop() {
+	a.log.Info("application shutdown")
 	a.gRPCServer.GracefulStop()
+
+	if err := a.db.Close(); err != nil {
+        a.log.Error("failed to close database connection", slog.String("error", err.Error()))
+    } else {
+        a.log.Info("database connection closed successfully")
+    }
+}
+
+func (a *App) MustRatesInit() {
+	exsist, err := a.db.IsTableEmpty(storages.TableNameForCurrencyRates)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	if !exsist {
+		a.log.Info("loading of exchange rates is not required, the data already exists in the database")
+		return
+	}
+
+	if err = a.db.RatesDownloadFromExternalAPI(storages.TableNameForCurrencyRates); err != nil {
+		a.log.Warn("failed to download currency rates from third-party API", slog.String("error", err.Error()))
+		
+		if err = a.db.LoadDefaultRates(storages.TableNameForCurrencyRates); err != nil {
+			panic(err.Error())
+		}
+		a.log.Warn("attention! currency exchange rates were loaded by default ")
+		return
+	}
+
+	a.log.Info("currency rates were loaded from a third-party api")
 }

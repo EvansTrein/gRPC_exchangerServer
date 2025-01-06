@@ -24,8 +24,22 @@ func New(storagePath string, log *slog.Logger) (*SQLiteDB, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// AppLog.Info("connect to DB successfully")
 	log.Info("connect to DB successfully")
 
 	return &SQLiteDB{db: db, log: log}, nil
+}
+
+func (s *SQLiteDB) Close() error {
+	if s.db == nil {
+		return fmt.Errorf("database connection is already closed")
+	}
+
+	err := s.db.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+
+	s.db = nil
+
+	return nil
 }

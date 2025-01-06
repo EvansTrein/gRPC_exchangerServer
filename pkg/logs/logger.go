@@ -25,7 +25,7 @@ func NewCustomHandler(output io.Writer, opts *slog.HandlerOptions) *CustomHandle
 func (h *CustomHandler) Handle(ctx context.Context, r slog.Record) error {
 	h.output.Write([]byte("\n"))
 
-	h.output.Write([]byte("Apps log:\n"))
+	h.output.Write([]byte("Apps log: "))
 
 	h.output.Write([]byte(r.Time.Format(time.Stamp) + "\n"))
 
