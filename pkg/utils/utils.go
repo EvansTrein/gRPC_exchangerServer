@@ -7,6 +7,10 @@ func ValidateCurrencyRequest(fromCurrency, toCurrency string) bool {
 		return false
 	}
 
+	if fromCurrency == toCurrency {
+		return false
+	}
+
 	if len(fromCurrency) > 5 || len(fromCurrency) < 3 {
 		return false
 	}

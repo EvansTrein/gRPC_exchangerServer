@@ -60,7 +60,7 @@ func (s *ServerGrpc) GetExchangeRateForCurrency(ctx context.Context, req *pb.Cur
 
 	if isValid := utils.ValidateCurrencyRequest(req.GetFromCurrency(), req.GetToCurrency()); !isValid {
 		log.Error("the data in the request did not pass the validity check", "error", ErrinValidData)
-		return nil, status.Error(codes.InvalidArgument, "invalid data in the request")
+		return nil, status.Error(codes.InvalidArgument, ErrinValidData.Error())
 	} else {
 		log.Debug(" the data in the request successfully passed the validity check")
 	}
@@ -71,7 +71,7 @@ func (s *ServerGrpc) GetExchangeRateForCurrency(ctx context.Context, req *pb.Cur
 	if err != nil {
 		if err == storages.ErrExchangeRateNotFound {
 			log.Error("exchange rate not found in the database", "error", err)
-			return nil, status.Errorf(codes.NotFound, "rate for pair %s/%s not found", req.GetFromCurrency(), req.GetToCurrency())
+			return nil, status.Error(codes.NotFound, err.Error())
 		}
 		log.Error("failed to retrieve data from the database", "error", err)
 		return nil, status.Errorf(codes.Internal, "failed to retrieve data from the database: %v", err)
