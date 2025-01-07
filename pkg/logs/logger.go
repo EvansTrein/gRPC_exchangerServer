@@ -53,6 +53,14 @@ func (h *CustomHandler) Handle(ctx context.Context, r slog.Record) error {
 		h.output.Write([]byte(source))
 	}
 
+	for _, attr := range h.attrs {
+		if attr.Key == "operation" {
+			h.output.Write([]byte("\033[38;5;90m" + attr.Key + "--> " + attr.Value.String() + "\033[0m" + "\n")) // purple color
+		} else {
+			h.output.Write([]byte(attr.Key + "--> " + attr.Value.String() + "\n"))
+		}
+	}
+
 	r.Attrs(func(attr slog.Attr) bool {
 		if attr.Key == "error" || attr.Key == "err" {
 			h.output.Write([]byte("\033[31m" + attr.Key + "--> " + attr.Value.String() + "\033[0m" + "\n")) // red color
@@ -61,14 +69,6 @@ func (h *CustomHandler) Handle(ctx context.Context, r slog.Record) error {
 		}
 		return true
 	})
-
-	for _, attr := range h.attrs {
-		if attr.Key == "operation" {
-			h.output.Write([]byte("\033[38;5;90m" + attr.Key + "--> " + attr.Value.String() + "\033[0m" + "\n")) // purple color
-		} else {
-			h.output.Write([]byte(attr.Key + "--> " + attr.Value.String() + "\n"))
-		}
-	}
 
 	h.output.Write([]byte("\n"))
 	return nil
