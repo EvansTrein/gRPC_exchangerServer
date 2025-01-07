@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"time"
 
 	"github.com/EvansTrein/gRPC_exchangerServer/internal/server"
 	"github.com/EvansTrein/gRPC_exchangerServer/internal/storages"
@@ -11,22 +12,24 @@ import (
 )
 
 type App struct {
-	log        *slog.Logger
-	gRPCServer *grpc.Server
-	port       int
-	db         storages.Database
+	log               *slog.Logger
+	gRPCServer        *grpc.Server
+	port              int
+	db                storages.Database
+	connectionTimeout time.Duration
 }
 
-func New(log *slog.Logger, port int, db storages.Database) *App {
-	gRPC := grpc.NewServer()
+func New(log *slog.Logger, port int, db storages.Database, connectionTimeout time.Duration) *App {
+	gRPC := grpc.NewServer(grpc.ConnectionTimeout(connectionTimeout))
 
 	server.RegisterServ(gRPC, db, log)
 
 	return &App{
-		log:        log,
-		gRPCServer: gRPC,
-		port:       port,
-		db: 		db,
+		log:               log,
+		gRPCServer:        gRPC,
+		port:              port,
+		db:                db,
+		connectionTimeout: connectionTimeout,
 	}
 }
 
@@ -52,10 +55,10 @@ func (a *App) Stop() {
 	a.gRPCServer.GracefulStop()
 
 	if err := a.db.Close(); err != nil {
-        a.log.Error("failed to close database connection", slog.String("error", err.Error()))
-    } else {
-        a.log.Info("database connection closed successfully")
-    }
+		a.log.Error("failed to close database connection", "error", err)
+	} else {
+		a.log.Info("database connection closed successfully")
+	}
 }
 
 func (a *App) MustRatesInit() {
@@ -69,10 +72,10 @@ func (a *App) MustRatesInit() {
 		return
 	}
 
-	if err = a.db.RatesDownloadFromExternalAPI(storages.TableNameForCurrencyRates); err != nil {
-		a.log.Warn("failed to download currency rates from third-party API", slog.String("error", err.Error()))
-		
-		if err = a.db.LoadDefaultRates(storages.TableNameForCurrencyRates); err != nil {
+	if err = a.db.RatesDownloadFromExternalAPI(); err != nil {
+		a.log.Warn("failed to download currency rates from third-party API", "error", err)
+
+		if err = a.db.LoadDefaultRates(); err != nil {
 			panic(err.Error())
 		}
 		a.log.Warn("attention! currency exchange rates were loaded by default ")

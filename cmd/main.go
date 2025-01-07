@@ -24,11 +24,11 @@ func init() {
 func main() {
 	db, err := sqlite.New(cfg.StoragePath, appLog)
 	if err != nil {
-		appLog.Error("failed to initialize database", slog.String("error", err.Error()))
+		appLog.Error("failed to initialize database", "error", err)
 		return
 	}
 
-	application := app.New(appLog, cfg.GrpcServ.Port, db)
+	application := app.New(appLog, cfg.GrpcServ.Port, db, cfg.GrpcServ.ConnectionTimeout)
 
 	application.MustRatesInit()
 
