@@ -37,17 +37,13 @@ func (a *App) MustStart() {
 
 	portListen, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
 	if err != nil {
-		// return fmt.Errorf("%s", err)
 		panic(err.Error())
 	}
 
 	a.log.Info("grpc server started", slog.String("port", portListen.Addr().String()))
 	if err := a.gRPCServer.Serve(portListen); err != nil {
-		// return fmt.Errorf("%s", err)
 		panic(err.Error())
 	}
-
-	// return nil
 }
 
 func (a *App) Stop() {
@@ -72,15 +68,18 @@ func (a *App) MustRatesInit() {
 		return
 	}
 
+	a.log.Info("there is no exchange rate data, let's start downloading them")
+
 	if err = a.db.RatesDownloadFromExternalAPI(); err != nil {
 		a.log.Warn("failed to download currency rates from third-party API", "error", err)
 
 		if err = a.db.LoadDefaultRates(); err != nil {
+			a.log.Error("failed to load default exchange rates", "error", err)
 			panic(err.Error())
 		}
-		a.log.Warn("attention! currency exchange rates were loaded by default ")
+		a.log.Warn("attention! currency exchange rates were loaded by DEFAULT ")
 		return
 	}
 
-	a.log.Info("currency rates were loaded from a third-party api")
+	a.log.Info("attention! currency rates were loaded from a third-party api")
 }

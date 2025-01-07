@@ -13,7 +13,7 @@ import (
 type CustomHandler struct {
 	handler slog.Handler
 	output  io.Writer
-	attrs []slog.Attr
+	attrs   []slog.Attr
 }
 
 func NewCustomHandler(output io.Writer, opts *slog.HandlerOptions) *CustomHandler {
@@ -48,22 +48,26 @@ func (h *CustomHandler) Handle(ctx context.Context, r slog.Record) error {
 	if r.PC != 0 {
 		fs := runtime.CallersFrames([]uintptr{r.PC})
 		f, _ := fs.Next()
-		source := "file--> " + f.File + 
-				"\ncode_line--> " + "\033[38;5;208m" + strconv.Itoa(f.Line) + "\033[0m" + "\n" // orange color
+		source := "file--> " + f.File +
+			"\ncode_line--> " + "\033[38;5;208m" + strconv.Itoa(f.Line) + "\033[0m" + "\n" // orange color
 		h.output.Write([]byte(source))
 	}
 
 	r.Attrs(func(attr slog.Attr) bool {
 		if attr.Key == "error" || attr.Key == "err" {
-        h.output.Write([]byte("\033[31m" + attr.Key + "--> " + attr.Value.String() + "\033[0m" + "\n"))  // red color
-    } else {
-        h.output.Write([]byte(attr.Key + "--> " + attr.Value.String() + "\n"))
-    }
+			h.output.Write([]byte("\033[31m" + attr.Key + "--> " + attr.Value.String() + "\033[0m" + "\n")) // red color
+		} else {
+			h.output.Write([]byte(attr.Key + "--> " + attr.Value.String() + "\n"))
+		}
 		return true
 	})
 
 	for _, attr := range h.attrs {
-		h.output.Write([]byte(attr.Key + "--> " + attr.Value.String() + "\n"))
+		if attr.Key == "operation" {
+			h.output.Write([]byte("\033[38;5;90m" + attr.Key + "--> " + attr.Value.String() + "\033[0m" + "\n")) // purple color
+		} else {
+			h.output.Write([]byte(attr.Key + "--> " + attr.Value.String() + "\n"))
+		}
 	}
 
 	h.output.Write([]byte("\n"))

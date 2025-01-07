@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/EvansTrein/gRPC_exchangerServer/internal/storages"
+	currencyrateapi "github.com/EvansTrein/gRPC_exchangerServer/pkg/currencyRateAPI"
+	"github.com/EvansTrein/gRPC_exchangerServer/pkg/utils"
 )
 
 func (s *SQLiteDB) Rate(ctx context.Context, fromCurrency, toCurrency string) (*storages.Rate, error) {
@@ -17,7 +19,7 @@ func (s *SQLiteDB) Rate(ctx context.Context, fromCurrency, toCurrency string) (*
 		slog.Any("calling context", ctx),
 		slog.String("function argument fromCurrency", fromCurrency),
 		slog.String("function argument toCurrency", toCurrency),
-    )
+	)
 
 	log.Debug("call of the Rate SQL method")
 
@@ -40,7 +42,7 @@ func (s *SQLiteDB) Rate(ctx context.Context, fromCurrency, toCurrency string) (*
 
 	stmt, err := s.db.PrepareContext(ctx, query)
 	if err != nil {
-		log.Error("failed to prepare SQL query", slog.String("error", err.Error()))
+		log.Error("failed to prepare SQL query", "error", err)
 		return nil, fmt.Errorf("failed to prepare SQL query: %v", err)
 	}
 	defer stmt.Close()
@@ -51,7 +53,7 @@ func (s *SQLiteDB) Rate(ctx context.Context, fromCurrency, toCurrency string) (*
 		if err == sql.ErrNoRows {
 			return nil, storages.ErrExchangeRateNotFound
 		}
-		log.Error("failed to execute SQL query", slog.String("error", err.Error()))
+		log.Error("failed to execute SQL query", "error", err)
 		return nil, err
 	}
 
@@ -109,11 +111,73 @@ func (s *SQLiteDB) AllRates(ctx context.Context) (map[string]float32, error) {
 }
 
 func (s *SQLiteDB) RatesDownloadFromExternalAPI() error {
+	op := "func RatesDownloadFromExternalAPI"
+	log := s.log.With(slog.String("operation", op))
 
-	return fmt.Errorf("error no func RatesDownloadFromExternalAPI")
+	log.Debug("call of the RatesDownloadFromExternalAPI SQL method")
+
+	data, err := s.allCurrencies()
+	if err != nil {
+		log.Error("failed to get all currencies from the database", "error", err)
+		return err
+	}
+
+	log.Debug("all currencies were successfully retrieved from the database", slog.Any("data", data))
+
+	pairs, err := utils.GenerateCurrencyPairs(data)
+	if err != nil {
+		log.Error("failed to get currency pairs", "error", err)
+		return err
+	}
+
+	log.Debug("currency pairs for API request successfully received", slog.Any("data", pairs))
+
+	var rates []storages.Rate
+	for baseCurrencie, toCurrencies := range pairs {
+		dataFromApi, err := currencyrateapi.DownloadExchangeRateData(baseCurrencie, toCurrencies)
+		if err != nil {
+			log.Error("failed to get data from third-party API", "error", err)
+			return err
+		}
+
+		if len(dataFromApi) == 0 {
+			log.Error("the request was successful, but no data", "error", err)
+			return err
+		}
+
+		rates = append(rates, dataFromApi...)
+	}
+
+	log.Debug("data was successfully received from the API", "data", rates, slog.Int("number of exchange rates", len(rates)))
+
+	today := time.Now().Format(time.DateTime)
+	query := `INSERT INTO Rates (baseCurrencyID, toCurrencyID, rate, date)
+				VALUES
+				((SELECT id FROM Currencies WHERE code = ?), (SELECT id FROM Currencies WHERE code = ?), ?, ?);`
+
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		log.Error("failed to prepare SQL query", "error", err)
+		return err
+	}
+	defer stmt.Close()
+
+	for _, el := range rates {
+		if _, err := stmt.Exec(el.BaseCurrency, el.ToCurrency, el.Rate, today); err != nil {
+			log.Error("SQL query failed", "error", err)
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *SQLiteDB) LoadDefaultRates() error {
+	op := "func LoadDefaultRates"
+	log := s.log.With(slog.String("operation", op))
+
+	log.Debug("call of the RatesDownloadFromExternalAPI SQL method")
+
 	queries := make([]string, 0, 4)
 	today := time.Now().Format(time.DateTime)
 
@@ -176,4 +240,36 @@ func (s *SQLiteDB) IsTableEmpty(tableName string) (bool, error) {
 	}
 
 	return count == 0, nil
+}
+
+func (s *SQLiteDB) allCurrencies() ([]string, error) {
+	op := "func allCurrencies"
+	log := s.log.With(slog.String("operation", op))
+
+	log.Debug("call of the allCurrencies SQL method")
+
+	var currencyCodes []string
+
+	rows, err := s.db.Query("SELECT code FROM Currencies")
+	if err != nil {
+		log.Error("failed to execute sql query", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			log.Error("failed to scan data received from the database", "error", err)
+			return nil, err
+		}
+		currencyCodes = append(currencyCodes, code)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Error("error when iterating over rows", "error", err)
+		return nil, err
+	}
+
+	return currencyCodes, nil
 }
