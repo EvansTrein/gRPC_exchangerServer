@@ -1,7 +1,9 @@
 package config
 
 import (
+	"flag"
 	"log"
+	"os"
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -20,8 +22,25 @@ type GrpcServer struct {
 
 func MustLoadConf() *Config {
 	var cfg Config
+	var filePath string
 
-	err := cleanenv.ReadConfig("config.yaml", &cfg)
+	flag.StringVar(&filePath, "config", "", "path to config file")
+	flag.Parse()
+	
+	switch filePath {
+	case "":
+		panic("no configuration is specified in the config flag")
+	case "default":
+		log.Println("ATTENTION!!! The server will be started with the default configuration")
+		defCfg := LoadDefConf()
+		return defCfg
+	default:
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			panic("config file does not exist: " + filePath)
+		}
+	}
+
+	err := cleanenv.ReadConfig(filePath, &cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
