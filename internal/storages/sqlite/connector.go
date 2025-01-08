@@ -12,7 +12,7 @@ type SQLiteDB struct {
 	db  *sql.DB
 	log *slog.Logger
 }
-
+// database connection
 func New(storagePath string, log *slog.Logger) (*SQLiteDB, error) {
 
 	db, err := sql.Open("sqlite3", storagePath)
@@ -29,6 +29,7 @@ func New(storagePath string, log *slog.Logger) (*SQLiteDB, error) {
 	return &SQLiteDB{db: db, log: log}, nil
 }
 
+// database disconnection
 func (s *SQLiteDB) Close() error {
 	if s.db == nil {
 		return fmt.Errorf("database connection is already closed")

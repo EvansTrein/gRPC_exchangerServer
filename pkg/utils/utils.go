@@ -2,6 +2,7 @@ package utils
 
 import "fmt"
 
+// data check
 func ValidateCurrencyRequest(fromCurrency, toCurrency string) bool {
 	if fromCurrency == "" || toCurrency == "" {
 		return false
@@ -22,6 +23,9 @@ func ValidateCurrencyRequest(fromCurrency, toCurrency string) bool {
 	return true
 }
 
+// in the output we will get a map: the base currency and a slice of strings
+// of all other currencies for which we need to make a rate
+// example: key = USD value = [EUR, CNY, RUB] 
 func GenerateCurrencyPairs(currencies []string) (map[string][]string, error) {
 	pairs := make(map[string][]string)
 
@@ -33,6 +37,7 @@ func GenerateCurrencyPairs(currencies []string) (map[string][]string, error) {
 				toCurrenciesValue = append(toCurrenciesValue, toCurrencie)
 			}
 		}
+		// is a check that all currencies have been added as a pair to the base currency
 		if len(toCurrenciesValue) != len(currencies)-1 {
 			return nil, fmt.Errorf("slice of currency pairs of incorrect length")
 		}

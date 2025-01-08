@@ -20,6 +20,7 @@ type GrpcServer struct {
 	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
 }
 
+// you can pass a file to the configuration to run it or run it with default parameters
 func MustLoadConf() *Config {
 	var cfg Config
 	var filePath string

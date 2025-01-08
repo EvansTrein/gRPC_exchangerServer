@@ -12,6 +12,7 @@ import (
 	"github.com/EvansTrein/gRPC_exchangerServer/pkg/utils"
 )
 
+// getting currency exchange rate from the database, e.g. USD to CNY
 func (s *SQLiteDB) Rate(ctx context.Context, fromCurrency, toCurrency string) (*storages.Rate, error) {
 	const op = "func Rate"
 	log := s.log.With(
@@ -60,6 +61,7 @@ func (s *SQLiteDB) Rate(ctx context.Context, fromCurrency, toCurrency string) (*
 	return &rate, nil
 }
 
+// retrieving all exchange rates from the database
 func (s *SQLiteDB) AllRates(ctx context.Context) (map[string]float32, error) {
 	const op = "func AllRates"
 	log := s.log.With(
@@ -68,7 +70,7 @@ func (s *SQLiteDB) AllRates(ctx context.Context) (map[string]float32, error) {
 	)
 	log.Debug("call of the AllRates SQL method")
 
-	answer := map[string]float32{}
+	answer := make(map[string]float32)
 	query := `
 		SELECT 
 			BaseCurrency.code AS baseCurrencyCode,
@@ -109,7 +111,7 @@ func (s *SQLiteDB) AllRates(ctx context.Context) (map[string]float32, error) {
 
 	return answer, nil
 }
-
+// obtaining exchange rate data from API and loading them into the database
 func (s *SQLiteDB) RatesDownloadFromExternalAPI() error {
 	op := "func RatesDownloadFromExternalAPI"
 	log := s.log.With(slog.String("operation", op))
@@ -124,13 +126,14 @@ func (s *SQLiteDB) RatesDownloadFromExternalAPI() error {
 
 	log.Debug("all currencies were successfully retrieved from the database", slog.Any("data", data))
 
+	// these are the arguments that the function takes to download data from the API next
 	pairs, err := utils.GenerateCurrencyPairs(data)
 	if err != nil {
 		log.Error("failed to get currency pairs", "error", err)
 		return err
 	}
 
-	log.Debug("currency pairs for API request successfully received", slog.Any("data", pairs))
+	log.Debug("currency pairs for API request successfully received", slog.Any("pairs", pairs))
 
 	var rates []storages.Rate
 	for baseCurrencie, toCurrencies := range pairs {
@@ -140,6 +143,7 @@ func (s *SQLiteDB) RatesDownloadFromExternalAPI() error {
 			return err
 		}
 
+		// additional verification that the data exists
 		if len(dataFromApi) == 0 {
 			log.Error("the request was successful, but no data", "error", err)
 			return err
@@ -171,7 +175,7 @@ func (s *SQLiteDB) RatesDownloadFromExternalAPI() error {
 
 	return nil
 }
-
+// loading of 4 currencies rates USD, EUR, CNY, RUB into the database
 func (s *SQLiteDB) LoadDefaultRates() error {
 	op := "func LoadDefaultRates"
 	log := s.log.With(slog.String("operation", op))
@@ -230,6 +234,7 @@ func (s *SQLiteDB) LoadDefaultRates() error {
 	return nil
 }
 
+// check that there are records in the table with courses
 func (s *SQLiteDB) IsTableEmpty(tableName string) (bool, error) {
 	var count int
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)
@@ -242,6 +247,7 @@ func (s *SQLiteDB) IsTableEmpty(tableName string) (bool, error) {
 	return count == 0, nil
 }
 
+// get all currencies from the Currencies table
 func (s *SQLiteDB) allCurrencies() ([]string, error) {
 	op := "func allCurrencies"
 	log := s.log.With(slog.String("operation", op))

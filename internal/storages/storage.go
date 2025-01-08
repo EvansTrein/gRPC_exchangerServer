@@ -5,6 +5,7 @@ import (
 	"errors"
 )
 
+// it is needed to check the table before loading data from API or default data
 const TableNameForCurrencyRates = "Rates"
 
 var ErrExchangeRateNotFound = errors.New("exchange rate not found")

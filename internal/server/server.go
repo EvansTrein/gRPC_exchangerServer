@@ -21,10 +21,12 @@ type ServerGrpc struct {
 	log *slog.Logger
 }
 
+// our server registration
 func RegisterServ(gRPC *grpc.Server, db storages.Database, log *slog.Logger) {
 	pb.RegisterExchangeServiceServer(gRPC, &ServerGrpc{db: db, log: log})
 }
 
+// gRPC method to get all exchange rates
 func (s *ServerGrpc) GetExchangeRates(ctx context.Context, req *pb.Empty) (*pb.ExchangeRatesResponse, error) {
 	const op = "func GetExchangeRates"
 	log := s.log.With(
@@ -33,7 +35,7 @@ func (s *ServerGrpc) GetExchangeRates(ctx context.Context, req *pb.Empty) (*pb.E
 	)
 	log.Debug("call of gRPC method GetExchangeRates")
 
-	resp := &pb.ExchangeRatesResponse{}
+	var resp pb.ExchangeRatesResponse
 
 	result, err := s.db.AllRates(ctx)
 	if err != nil {
@@ -44,9 +46,10 @@ func (s *ServerGrpc) GetExchangeRates(ctx context.Context, req *pb.Empty) (*pb.E
 	resp.Rates = result
 
 	s.log.Info("data for all courses has been successfully submitted")
-	return resp, nil
+	return &resp, nil
 }
 
+// gRPC method for obtaining exchange rates
 func (s *ServerGrpc) GetExchangeRateForCurrency(ctx context.Context, req *pb.CurrencyRequest) (*pb.ExchangeRateResponse, error) {
 	const op = "func GetExchangeRateForCurrency"
 	log := s.log.With(
@@ -65,7 +68,7 @@ func (s *ServerGrpc) GetExchangeRateForCurrency(ctx context.Context, req *pb.Cur
 		log.Debug("the data in the request successfully passed the validity check")
 	}
 
-	resp := &pb.ExchangeRateResponse{}
+	var resp pb.ExchangeRateResponse
 
 	result, err := s.db.Rate(ctx, req.GetFromCurrency(), req.GetToCurrency())
 	if err != nil {
@@ -77,10 +80,11 @@ func (s *ServerGrpc) GetExchangeRateForCurrency(ctx context.Context, req *pb.Cur
 		return nil, status.Errorf(codes.Internal, "failed to retrieve data from the database: %v", err)
 	}
 
+	// add data to the response
 	resp.FromCurrency = result.BaseCurrency
 	resp.ToCurrency = result.ToCurrency
 	resp.Rate = result.Rate
 
 	s.log.Info("exchange rate data successfully sent")
-	return resp, nil
+	return &resp, nil
 }

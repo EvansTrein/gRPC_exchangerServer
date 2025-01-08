@@ -19,6 +19,7 @@ type App struct {
 	connectionTimeout time.Duration
 }
 
+// new application creation
 func New(log *slog.Logger, port int, db storages.Database, connectionTimeout time.Duration) *App {
 	gRPC := grpc.NewServer(grpc.ConnectionTimeout(connectionTimeout))
 
@@ -33,6 +34,7 @@ func New(log *slog.Logger, port int, db storages.Database, connectionTimeout tim
 	}
 }
 
+// application start
 func (a *App) MustStart() {
 
 	portListen, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
@@ -46,6 +48,7 @@ func (a *App) MustStart() {
 	}
 }
 
+// stopping the application and closing the database connection
 func (a *App) Stop() {
 	a.log.Info("application shutdown")
 	a.gRPCServer.GracefulStop()
@@ -57,6 +60,8 @@ func (a *App) Stop() {
 	}
 }
 
+// if there is no data in the table, then load them from API and if it fails to load them, 
+// then load default ones, if it fails here too, then panic 
 func (a *App) MustRatesInit() {
 	exsist, err := a.db.IsTableEmpty(storages.TableNameForCurrencyRates)
 	if err != nil {

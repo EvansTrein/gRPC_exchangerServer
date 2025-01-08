@@ -16,6 +16,7 @@ import (
 const urlAPI = "https://api.fxratesapi.com/latest"
 const myApiKey = "fxr_live_80e48706cea1f3527bc8bbb9b1e43137023a"
 
+// JSON that comes from api.fxratesapi.com
 type exchangeRatesResponse struct {
 	Success     bool               `json:"success"`
 	Error       string             `json:"error"`
@@ -24,10 +25,12 @@ type exchangeRatesResponse struct {
 	Rates       map[string]float32 `json:"rates"`
 }
 
+// requesting data from a third-party API
 func DownloadExchangeRateData(baseCurrencyCode string, toCurrencysCodes []string) ([]storages.Rate, error) {
 	var builder strings.Builder
 	var url string
 
+	// form url, add parameters
 	builder.WriteString(urlAPI)
 
 	builder.WriteString("?api_key=")
