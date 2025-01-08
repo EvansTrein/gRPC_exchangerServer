@@ -62,7 +62,7 @@ func (s *ServerGrpc) GetExchangeRateForCurrency(ctx context.Context, req *pb.Cur
 		log.Error("the data in the request did not pass the validity check", "error", ErrinValidData)
 		return nil, status.Error(codes.InvalidArgument, ErrinValidData.Error())
 	} else {
-		log.Debug(" the data in the request successfully passed the validity check")
+		log.Debug("the data in the request successfully passed the validity check")
 	}
 
 	resp := &pb.ExchangeRateResponse{}

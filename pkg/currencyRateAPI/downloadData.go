@@ -48,23 +48,23 @@ func DownloadExchangeRateData(baseCurrencyCode string, toCurrencysCodes []string
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при создании HTTP запроса: %v", err)
+		return nil, fmt.Errorf("failed to create http request: %v", err)
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при выполнении HTTP запроса: %v", err)
+		return nil, fmt.Errorf("failed to execute http request: %v", err)
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при чтении тела ответа: %v", err)
+		return nil, fmt.Errorf("failed to read the response body: %v", err)
 	}
 
 	var response exchangeRatesResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, fmt.Errorf("ошибка при парсинге JSON: %v", err)
+		return nil, fmt.Errorf("failed to parse the response into JSON: %v", err)
 	}
 
 	if !response.Success {
