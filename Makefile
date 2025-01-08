@@ -12,3 +12,9 @@ run:
 
 run-default:
 	go run cmd/main.go -config default
+
+docker-start:
+	docker run -d --name gRPC_server -p 44000:44000 grpc-server
+
+docker-build:
+	docker build . -t grpc-server --no-cache
