@@ -12,16 +12,13 @@ import (
 	"github.com/EvansTrein/gRPC_exchangerServer/pkg/logs"
 )
 
-var cfg *config.Config
-var appLog *slog.Logger
-
-func init() {
-	cfg = config.MustLoadConf()
-
-	appLog = logs.InitLog(cfg.Env)
-}
-
 func main() {
+	var cfg *config.Config
+	var appLog *slog.Logger
+
+	cfg = config.MustLoadConf()
+	appLog = logs.InitLog(cfg.Env)
+
 	db, err := sqlite.New(cfg.StoragePath, appLog)
 	if err != nil {
 		appLog.Error("failed to initialize database", "error", err)
