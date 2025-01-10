@@ -25,7 +25,7 @@ func main() {
 		return
 	}
 
-	application := app.New(appLog, cfg.GrpcServ.Port, db, cfg.GrpcServ.ConnectionTimeout)
+	application := app.New(appLog, db, &cfg.GrpcServ)
 
 	application.MustRatesInit()
 

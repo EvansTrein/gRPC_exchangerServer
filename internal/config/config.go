@@ -16,8 +16,12 @@ type Config struct {
 }
 
 type GrpcServer struct {
-	Port              int           `yaml:"port"`
-	ConnectionTimeout time.Duration `yaml:"connectionTimeout"`
+	Port                  int           `yaml:"port"`
+	MaxConnectionIdle     time.Duration `yaml:"maxConnectionIdle"`
+	MaxConnectionAge      time.Duration `yaml:"maxConnectionAge"`
+	MaxConnectionAgeGrace time.Duration `yaml:"maxConnectionAgeGrace"`
+	Time                  time.Duration `yaml:"time"`
+	Timeout               time.Duration `yaml:"timeout"`
 }
 
 // you can pass a file to the configuration to run it or run it with default parameters
@@ -27,7 +31,7 @@ func MustLoadConf() *Config {
 
 	flag.StringVar(&filePath, "config", "", "path to config file")
 	flag.Parse()
-	
+
 	switch filePath {
 	case "":
 		panic("no configuration is specified in the config flag")

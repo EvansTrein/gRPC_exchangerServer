@@ -3,7 +3,14 @@ package config
 import "time"
 
 func LoadDefConf() *Config {
-	s := GrpcServer{55000, time.Second * 10}
+	s := GrpcServer{
+		Port: 55000,
+		MaxConnectionIdle: time.Second * 15,
+		MaxConnectionAge: time.Second * 60,
+		MaxConnectionAgeGrace: time.Second * 10,
+		Time: time.Second * 15,
+		Timeout: time.Second * 5,               
+	}
 
 	d := Config{
 		Env:         "local",

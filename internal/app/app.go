@@ -4,45 +4,62 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"time"
 
+	"github.com/EvansTrein/gRPC_exchangerServer/internal/config"
 	"github.com/EvansTrein/gRPC_exchangerServer/internal/server"
 	"github.com/EvansTrein/gRPC_exchangerServer/internal/storages"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
 type App struct {
-	log               *slog.Logger
-	gRPCServer        *grpc.Server
-	port              int
-	db                storages.Database
-	connectionTimeout time.Duration
+	log        *slog.Logger
+	gRPCServer *grpc.Server
+	db         storages.Database
+	conf       *config.GrpcServer
 }
 
 // new application creation
-func New(log *slog.Logger, port int, db storages.Database, connectionTimeout time.Duration) *App {
-	gRPC := grpc.NewServer(grpc.ConnectionTimeout(connectionTimeout))
+func New(log *slog.Logger, db storages.Database, conf *config.GrpcServer) *App {
+
+	ka := keepalive.ServerParameters{
+		MaxConnectionIdle:     conf.MaxConnectionIdle,     // Максимальное время бездействия соединения
+		MaxConnectionAge:      conf.MaxConnectionAge,      // Максимальное время жизни соединения
+		MaxConnectionAgeGrace: conf.MaxConnectionAgeGrace, // Время для завершения активных запросов
+		Time:                  conf.Time,                  // Время между keepalive ping
+		Timeout:               conf.Timeout,               // Таймаут на ответ от клиента
+	}
+
+	gRPC := grpc.NewServer(grpc.KeepaliveParams(ka))
 
 	server.RegisterServ(gRPC, db, log)
 
 	return &App{
-		log:               log,
-		gRPCServer:        gRPC,
-		port:              port,
-		db:                db,
-		connectionTimeout: connectionTimeout,
+		log:        log,
+		gRPCServer: gRPC,
+		db:         db,
+		conf:       conf,
 	}
 }
 
 // application start
 func (a *App) MustStart() {
+	log := a.log.With(
+		slog.Int("Port", a.conf.Port),
+		slog.String("MaxConnectionIdle", a.conf.MaxConnectionIdle.String()),
+		slog.String("MaxConnectionAge", a.conf.MaxConnectionAge.String()),
+		slog.String("MaxConnectionAgeGrace", a.conf.MaxConnectionAgeGrace.String()),
+		slog.String("Time", a.conf.Time.String()),
+		slog.String("Timeout", a.conf.Timeout.String()),
+	)
+	log.Debug("started gRPC server")
 
-	portListen, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
+	portListen, err := net.Listen("tcp", fmt.Sprintf(":%d", a.conf.Port))
 	if err != nil {
 		panic(err.Error())
 	}
 
-	a.log.Info("grpc server started", slog.String("port", portListen.Addr().String()))
+	a.log.Info(" gRPC server successfully started", slog.String("port", portListen.Addr().String()))
 	if err := a.gRPCServer.Serve(portListen); err != nil {
 		panic(err.Error())
 	}
@@ -60,8 +77,8 @@ func (a *App) Stop() {
 	}
 }
 
-// if there is no data in the table, then load them from API and if it fails to load them, 
-// then load default ones, if it fails here too, then panic 
+// if there is no data in the table, then load them from API and if it fails to load them,
+// then load default ones, if it fails here too, then panic
 func (a *App) MustRatesInit() {
 	exsist, err := a.db.IsTableEmpty(storages.TableNameForCurrencyRates)
 	if err != nil {

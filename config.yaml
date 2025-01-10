@@ -3,4 +3,8 @@ storage_path: "./internal/storages/exchanger.db"
 
 grpc_server: 
   port: 44000
-  connectionTimeout: 5s
+  maxConnectionIdle: 15s
+  maxConnectionAge: 30s
+  maxConnectionAgeGrace: 5s
+  time: 10s
+  timeout: 5s
