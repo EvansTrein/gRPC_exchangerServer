@@ -23,11 +23,11 @@ type App struct {
 func New(log *slog.Logger, db storages.Database, conf *config.GrpcServer) *App {
 
 	ka := keepalive.ServerParameters{
-		MaxConnectionIdle:     conf.MaxConnectionIdle,     // Максимальное время бездействия соединения
-		MaxConnectionAge:      conf.MaxConnectionAge,      // Максимальное время жизни соединения
-		MaxConnectionAgeGrace: conf.MaxConnectionAgeGrace, // Время для завершения активных запросов
-		Time:                  conf.Time,                  // Время между keepalive ping
-		Timeout:               conf.Timeout,               // Таймаут на ответ от клиента
+		MaxConnectionIdle:     conf.MaxConnectionIdle,     // maximum connection inactivity time
+		MaxConnectionAge:      conf.MaxConnectionAge,      // maximum connection lifetime
+		MaxConnectionAgeGrace: conf.MaxConnectionAgeGrace, // time to complete active requests
+		Time:                  conf.Time,                  // time between keepalive ping
+		Timeout:               conf.Timeout,               // timeout for response from the client
 	}
 
 	gRPC := grpc.NewServer(grpc.KeepaliveParams(ka))
