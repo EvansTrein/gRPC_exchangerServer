@@ -29,10 +29,7 @@ func RegisterServ(gRPC *grpc.Server, db storages.Database, log *slog.Logger) {
 // gRPC method to get all exchange rates
 func (s *ServerGrpc) GetExchangeRates(ctx context.Context, req *pb.Empty) (*pb.ExchangeRatesResponse, error) {
 	const op = "func GetExchangeRates"
-	log := s.log.With(
-		slog.String("operation", op),
-		slog.Any("query context", ctx),
-	)
+	log := s.log.With(slog.String("operation", op))
 	log.Debug("call of gRPC method GetExchangeRates")
 
 	var resp pb.ExchangeRatesResponse
@@ -45,7 +42,7 @@ func (s *ServerGrpc) GetExchangeRates(ctx context.Context, req *pb.Empty) (*pb.E
 
 	resp.Rates = result
 
-	s.log.Info("data for all courses has been successfully submitted")
+	log.Info("data for all courses has been successfully submitted")
 	return &resp, nil
 }
 
@@ -54,7 +51,6 @@ func (s *ServerGrpc) GetExchangeRateForCurrency(ctx context.Context, req *pb.Cur
 	const op = "func GetExchangeRateForCurrency"
 	log := s.log.With(
 		slog.String("operation", op),
-		slog.Any("query context", ctx),
 		slog.String("FromCurrency request parameter", req.GetFromCurrency()),
 		slog.String("ToCurrency request parameter", req.GetToCurrency()),
 	)
@@ -85,6 +81,6 @@ func (s *ServerGrpc) GetExchangeRateForCurrency(ctx context.Context, req *pb.Cur
 	resp.ToCurrency = result.ToCurrency
 	resp.Rate = result.Rate
 
-	s.log.Info("exchange rate data successfully sent")
+	log.Info("exchange rate data successfully sent")
 	return &resp, nil
 }

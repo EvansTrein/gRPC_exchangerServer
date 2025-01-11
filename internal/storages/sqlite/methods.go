@@ -17,7 +17,6 @@ func (s *SQLiteDB) Rate(ctx context.Context, fromCurrency, toCurrency string) (*
 	const op = "func Rate"
 	log := s.log.With(
 		slog.String("operation", op),
-		slog.Any("calling context", ctx),
 		slog.String("function argument fromCurrency", fromCurrency),
 		slog.String("function argument toCurrency", toCurrency),
 	)
@@ -58,16 +57,14 @@ func (s *SQLiteDB) Rate(ctx context.Context, fromCurrency, toCurrency string) (*
 		return nil, err
 	}
 
+	log.Info("database data successfully retrieved")
 	return &rate, nil
 }
 
 // retrieving all exchange rates from the database
 func (s *SQLiteDB) AllRates(ctx context.Context) (map[string]float32, error) {
 	const op = "func AllRates"
-	log := s.log.With(
-		slog.String("operation", op),
-		slog.Any("calling context", ctx),
-	)
+	log := s.log.With(slog.String("operation", op))
 	log.Debug("call of the AllRates SQL method")
 
 	answer := make(map[string]float32)
@@ -109,6 +106,7 @@ func (s *SQLiteDB) AllRates(ctx context.Context) (map[string]float32, error) {
 		return nil, err
 	}
 
+	log.Info("database data successfully retrieved")
 	return answer, nil
 }
 // obtaining exchange rate data from API and loading them into the database
@@ -173,6 +171,7 @@ func (s *SQLiteDB) RatesDownloadFromExternalAPI() error {
 		}
 	}
 
+	log.Info("data from a third-party API has been successfully saved in the database")
 	return nil
 }
 // loading of 4 currencies rates USD, EUR, CNY, RUB into the database
@@ -231,6 +230,7 @@ func (s *SQLiteDB) LoadDefaultRates() error {
 		}
 	}
 
+	log.Info("default data successfully saved in the database")
 	return nil
 }
 
@@ -277,5 +277,6 @@ func (s *SQLiteDB) allCurrencies() ([]string, error) {
 		return nil, err
 	}
 
+	log.Info("database data successfully retrieved")
 	return currencyCodes, nil
 }
